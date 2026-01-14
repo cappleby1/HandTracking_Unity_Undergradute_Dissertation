@@ -1,4 +1,4 @@
-Unity Undergraduate Dissertation
+This project used my undergraduate disseration as a foundation and is currently being updated to add more features.
 
 To run this project:
 
