@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1920
     height: 989
   m_ShowMode: 4
-  m_Title: Project
+  m_Title: Game
   m_RootView: {fileID: 2}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -119,7 +119,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 112}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 37
+  controlID: 101
   draggingID: 0
 --- !u!114 &6
 MonoBehaviour:
@@ -218,8 +218,8 @@ MonoBehaviour:
     y: 0
     width: 1104
     height: 552
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 202, y: 226}
+  m_MaxSize: {x: 4002, y: 4026}
   m_ActualView: {fileID: 15}
   m_Panes:
   - {fileID: 15}
@@ -693,10 +693,7 @@ MonoBehaviour:
       m_LastClickedID:
         m_Data: 0
       m_ExpandedIDs:
-      - m_Data: -68412
-      - m_Data: -43198
-      - m_Data: -20452
-      - m_Data: -18228
+      - m_Data: -1282
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1233,9 +1230,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: -4.8254495, y: 1.7590002, z: -1.5990651}
+    m_Target: {x: -4.8591723, y: 0.50077844, z: -1.8271589}
     speed: 2
-    m_Value: {x: -4.8254495, y: 1.7590002, z: -1.5990651}
+    m_Value: {x: -4.8591723, y: 0.50077844, z: -1.8271589}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -1281,9 +1278,9 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: -0.0054573067, y: 0.5017217, z: -0.0031675808, w: -0.86501193}
+    m_Target: {x: -0.050574318, y: 0.5086153, z: -0.02994831, w: -0.85899115}
     speed: 2
-    m_Value: {x: -0.0054572793, y: 0.5017192, z: -0.003167565, w: -0.8650076}
+    m_Value: {x: -0.050574064, y: 0.50861275, z: -0.02994816, w: -0.85898685}
   m_Size:
     m_Target: 6.006958
     speed: 2
@@ -1389,12 +1386,12 @@ MonoBehaviour:
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs:
-    - m_Data: 36370
+    - m_Data: 33608
     m_LastClickedID:
-      m_Data: 36370
+      m_Data: 33608
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 36364
+    - m_Data: 33514
     - m_Data: 1000000000
     - m_Data: 2147483647
     m_RenameOverlay:
@@ -1427,7 +1424,9 @@ MonoBehaviour:
     m_SelectedIDs: []
     m_LastClickedID:
       m_Data: 0
-    m_ExpandedIDs: []
+    m_ExpandedIDs:
+    - m_Data: 0
+    - m_Data: 33514
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1456,7 +1455,7 @@ MonoBehaviour:
   m_ListAreaState:
     m_SelectedInstanceIDs: []
     m_LastClickedInstanceID: 0
-    m_HadKeyboardFocusLastEvent: 1
+    m_HadKeyboardFocusLastEvent: 0
     m_ExpandedInstanceIDs: []
     m_RenameOverlay:
       m_UserAcceptedRename: 0
