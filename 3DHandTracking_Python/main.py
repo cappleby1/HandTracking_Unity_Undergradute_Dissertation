@@ -1,69 +1,111 @@
-import time
 import cv2
-from cvzone.HandTrackingModule import HandDetector
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 import socket
+import json
 
-# Parameters
-width, height = 2560, 1664
+# ----------------------------
+# Model setup
+# ----------------------------
+MODEL_PATH = "hand_landmarker.task"
 
-# Webcam Settings
+BaseOptions = python.BaseOptions
+HandLandmarker = vision.HandLandmarker
+HandLandmarkerOptions = vision.HandLandmarkerOptions
+VisionRunningMode = vision.RunningMode
+
+options = HandLandmarkerOptions(
+    base_options=BaseOptions(model_asset_path=MODEL_PATH),
+    running_mode=VisionRunningMode.VIDEO,
+    num_hands=2
+)
+
+landmarker = HandLandmarker.create_from_options(options)
+
+# ----------------------------
+# Webcam
+# ----------------------------
 cap = cv2.VideoCapture(0)
-cap.set(3, width)
-cap.set(4, height)
 
-# Hand tracking settings
-detector = HandDetector(maxHands=1, detectionCon=0.9)
+# Try setting a preferred resolution (optional)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
-# Socket setup
+# Get the actual webcam resolution
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print(f"Webcam actual resolution: {frame_width} x {frame_height}")
+
+# ----------------------------
+# UDP socket
+# ----------------------------
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 serverAddressPort = ("127.0.0.1", 3001)
 
-start_time = time.time()
-frame_count = 0
-
-total_frames = 0
-detected_frames = 0
-
-counting = False
-
-while True:
-    # Get frame
-    success, img = cap.read()
-
-    # Find hands & save the coordinates in a dictionary
-    hands, img = detector.findHands(img)
+# ----------------------------
+# Helper: convert landmarks to dicts and mirror for Unity
+# ----------------------------
+def landmarks_to_dict(hand_landmarks, mirror_x=False):
     data = []
+    for lm in hand_landmarks:
+        x, y, z = lm
+        if mirror_x:
+            x = 1 - x  # mirror X for Unity camera
+        data.append({"x": float(x), "y": float(y), "z": float(z)})
+    return data
 
-    if hands:
-        if not counting:
-            counting = True
+# ----------------------------
+# Main loop
+# ----------------------------
+timestamp = 0
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
 
-        detected_frames += 1
+    # Convert to RGB for MediaPipe
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
 
-    if counting:
-        total_frames += 1
+    results = landmarker.detect_for_video(mp_image, timestamp)
+    timestamp += 1
 
-    # Landmark Values x, y, z
-    if hands:
-        # Get first hand
-        hand = hands[0]
+    left_frame = []
+    right_frame = []
 
-        # Get landmark list
-        landmarkList = hand['lmList']
+    if results.hand_landmarks and results.handedness:
+        for hand_landmarks, handedness in zip(results.hand_landmarks, results.handedness):
+            # Convert to tuples
+            landmark_array = [(lm.x, lm.y, lm.z) for lm in hand_landmarks]
 
-        for landmark in landmarkList:
-            data.extend([landmark[0], height - landmark[1], landmark[2]])
-        sock.sendto(str.encode(str(data)), serverAddressPort)
+            hand_label = handedness[0].category_name  # "Left" or "Right"
 
-    cv2.imshow('Image', img)
-    cv2.waitKey(1)
+            # Mirror X for Unity perspective
+            if hand_label == "Left":
+                left_frame = landmarks_to_dict(landmark_array, mirror_x=True)
+            else:
+                right_frame = landmarks_to_dict(landmark_array, mirror_x=True)
 
-    frame_count += 1
-    if frame_count % 10 == 0:  # Update FPS every 10 frames
-        elapsed_time = time.time() - start_time
-        fps = frame_count / elapsed_time
-        print("FPS:", fps)
+    # Send normalized landmarks to Unity
+    payload = {"left": left_frame, "right": right_frame}
+    sock.sendto(json.dumps(payload).encode("utf-8"), serverAddressPort)
 
-    if total_frames > 0:
-        detection_rate = (detected_frames / total_frames) * 100
-        print("Detection Rate: {:.2f}%".format(detection_rate))
+    # Optional: draw on OpenCV window
+    for hand in [left_frame, right_frame]:
+        for lm in hand:
+            cx = int(lm["x"] * frame_width)
+            cy = int(lm["y"] * frame_height)
+            cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
+
+    cv2.imshow("Hands", frame)
+    if cv2.waitKey(1) & 0xFF == 27:
+        break
+
+
+# ----------------------------
+# Cleanup
+# ----------------------------
+cap.release()
+cv2.destroyAllWindows()
+sock.close()
