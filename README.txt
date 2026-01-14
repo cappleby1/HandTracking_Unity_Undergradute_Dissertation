@@ -8,4 +8,4 @@ To run this project:
 
 PLEASE NOTE:
 
-USE PYTHON 3.11
+This is using python 3.11 & unity 6.3 as of 14/1/26
