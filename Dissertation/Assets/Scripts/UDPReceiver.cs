@@ -52,7 +52,7 @@ public class UDPReceiver : MonoBehaviour
 
             catch 
             {
-                debug.log("Problems receiving data")
+                Debug.Log("Problems receiving data");
             }
         }
     }
