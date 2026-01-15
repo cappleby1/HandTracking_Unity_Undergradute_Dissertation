@@ -36,16 +36,19 @@ public class HandTracking : MonoBehaviour
 
     void Start()
     {
+        // Set up points (so they aren't all created in the inspector)
         leftHandPoints = new GameObject[21];
         leftPrevPositions = new Vector3[21];
         rightHandPoints = new GameObject[21];
         rightPrevPositions = new Vector3[21];
 
+        // Set all the points (so they're all the same)
         GameObject leftParent = new GameObject("LeftHandPoints");
         leftParent.transform.parent = transform;
         GameObject rightParent = new GameObject("RightHandPoints");
         rightParent.transform.parent = transform;
 
+        // Make sure all the joints are set to track positions
         for (int i = 0; i < 21; i++)
         {
             GameObject lp = Instantiate(pointPrefab, leftParent.transform);
@@ -61,6 +64,7 @@ public class HandTracking : MonoBehaviour
             rightPrevPositions[i] = rp.transform.localPosition;
         }
 
+        // Set up the connection lines (to look more like hands)
         for (int i = 0; i < connections.GetLength(0); i++)
         {
             // Left
@@ -89,6 +93,7 @@ public class HandTracking : MonoBehaviour
 
     void Update()
     {
+        // Don't update if no data received
         if (uDPReceiver == null) return;
 
         string json = uDPReceiver.data;
@@ -96,7 +101,8 @@ public class HandTracking : MonoBehaviour
 
         HandFrame frame = JsonUtility.FromJson<HandFrame>(json);
         if (frame == null) return;
-
+        
+        // Updates the points for both left and right hands (replace old pos with new pos)
         if (frame.left != null && frame.left.Length == 21)
             UpdateHand(frame.left, leftHandPoints, leftPrevPositions, leftLines);
 
@@ -105,20 +111,25 @@ public class HandTracking : MonoBehaviour
     }
 
 
+    // Used to update the look of the hands (so they move around as they should)
     void UpdateHand(HandLandmark[] landmarks, GameObject[] points, Vector3[] prevPositions, List<LineRenderer> lines)
     {
         for (int i = 0; i < landmarks.Length; i++)
         {
+            // Set the points so they're the right size and position
             float x = (landmarks[i].x - 0.5f) * scale;
             float y = (0.5f - landmarks[i].y) * scale;
             float z = -landmarks[i].z * scale;
 
             Vector3 target = new Vector3(x, y, z) + baseOffset;
+            
+            // Make the movement between frames as smooth as possible
             Vector3 smooth = prevPositions[i] * (1f - smoothFactor) + target * smoothFactor;
             points[i].transform.localPosition = smooth;
             prevPositions[i] = smooth;
         }
 
+        // Set the actual positions for the lines
         for (int i = 0; i < connections.GetLength(0); i++)
         {
             lines[i].SetPosition(0, points[connections[i, 0]].transform.localPosition);

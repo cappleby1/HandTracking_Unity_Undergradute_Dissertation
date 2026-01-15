@@ -31,6 +31,7 @@ public class UDPReceiver : MonoBehaviour
         receiveThread.Start();
     }
 
+    // Try to receieve the coords
     void ReceiveData()
     {
         client = new UdpClient(port);
@@ -42,15 +43,21 @@ public class UDPReceiver : MonoBehaviour
                 byte[] dataByte = client.Receive(ref anyIP);
                 string received = Encoding.UTF8.GetString(dataByte);
 
+                // Lock to stop issues from receiving
                 lock (dataLock)
                 {
                     latestDataRaw = received;
                 }
             }
-            catch { }
+
+            catch 
+            {
+                debug.log("Problems receiving data")
+            }
         }
     }
 
+    // Close everything on quit / Clean up
     void OnApplicationQuit()
     {
         if (client != null) client.Close();
