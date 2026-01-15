@@ -8,10 +8,13 @@ public class UDPReceiver : MonoBehaviour
 {
     Thread receiveThread;
     UdpClient client;
+    volatile bool running;
+    bool cleanedUp;
 
     public int port = 3001;
+
     private string latestDataRaw;
-    private object dataLock = new object();
+    private readonly object dataLock = new object();
 
     public string data
     {
@@ -26,41 +29,68 @@ public class UDPReceiver : MonoBehaviour
 
     void Start()
     {
+        running = true;
         receiveThread = new Thread(ReceiveData);
         receiveThread.IsBackground = true;
         receiveThread.Start();
     }
 
-    // Try to receieve the coords
     void ReceiveData()
     {
-        client = new UdpClient(port);
-        while (true)
+        try
         {
-            try
+            client = new UdpClient(port);
+
+            while (running)
             {
                 IPEndPoint anyIP = new IPEndPoint(IPAddress.Any, 0);
                 byte[] dataByte = client.Receive(ref anyIP);
                 string received = Encoding.UTF8.GetString(dataByte);
 
-                // Lock to stop issues from receiving
                 lock (dataLock)
                 {
                     latestDataRaw = received;
                 }
             }
-
-            catch 
-            {
-                Debug.Log("Problems receiving data");
-            }
+        }
+        catch (SocketException)
+        {
+            // Expected during shutdown
+        }
+        catch
+        {
+            // NO Debug.Log here — threads must stay silent
         }
     }
 
-    // Close everything on quit / Clean up
+    void Cleanup()
+    {
+        if (cleanedUp) return;
+        cleanedUp = true;
+
+        running = false;
+
+        if (client != null)
+        {
+            client.Close();
+            client = null;
+        }
+
+        if (receiveThread != null && receiveThread.IsAlive)
+        {
+            receiveThread.Join(100);
+            receiveThread = null;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (Application.isPlaying)
+            Cleanup();
+    }
+
     void OnApplicationQuit()
     {
-        if (client != null) client.Close();
-        if (receiveThread != null && receiveThread.IsAlive) receiveThread.Abort();
+        Cleanup();
     }
 }
